@@ -1,5 +1,18 @@
 package io.jenkins.plugins.sdkmantoolinstaller;
 
+import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.model.JDK;
+import hudson.model.Node;
+import hudson.model.TaskListener;
+import hudson.remoting.VirtualChannel;
+import hudson.tools.ToolInstallation;
+import hudson.tools.ToolInstaller;
+import hudson.tools.ToolInstallerDescriptor;
+import hudson.tools.ZipExtractionInstaller;
+import io.jenkins.plugins.sdkmantoolinstaller.SDKMan.CandidateVersion;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -15,52 +28,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Stream;
-
+import jenkins.model.Jenkins;
+import jenkins.security.MasterToSlaveCallable;
 import org.apache.commons.io.input.CountingInputStream;
 import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundConstructor;
-
-/*
- * #%L
- * SDKMAN Tool Installer Plugin
- * %%
- * Copyright (C) 2025 Brett Smith
- * %%
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- * #L%
- */
-
-import edu.umd.cs.findbugs.annotations.NonNull;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-import hudson.Extension;
-import hudson.FilePath;
-import hudson.model.JDK;
-import hudson.model.Node;
-import hudson.model.TaskListener;
-import hudson.remoting.VirtualChannel;
-import hudson.tools.ToolInstallation;
-import hudson.tools.ToolInstaller;
-import hudson.tools.ToolInstallerDescriptor;
-import hudson.tools.ZipExtractionInstaller;
-import io.jenkins.plugins.sdkmantoolinstaller.SDKMan.CandidateVersion;
-import jenkins.model.Jenkins;
-import jenkins.security.MasterToSlaveCallable;
 
 /**
  * Install a SDK from from <a href="https://adoptium.net">SDKAMN</a>
@@ -74,8 +46,8 @@ public class SDKMANToolInstaller extends ToolInstaller {
      * Eclipse Temurin release id
      */
     public final String id;
-    
-    private final static SDKMan sdkMan = new SDKMan();
+
+    private static final SDKMan sdkMan = new SDKMan();
 
     @DataBoundConstructor
     public SDKMANToolInstaller(String id) {
@@ -89,92 +61,99 @@ public class SDKMANToolInstaller extends ToolInstaller {
     protected String sdkCandidate() {
         return "java";
     }
-    
+
     private static SDKMan.Platform toPlatform(Platform platform, CPU cpu) {
-    	switch(platform) {
-		case ALPINE_LINUX:
-    	case LINUX:
-    		switch(cpu) {
-    		case amd64:
-    			return SDKMan.Platform.LINUX64;
-    		case arm:
-    			/* TODO can be more specific? */
-    			return SDKMan.Platform.LINUXARM64;
-    		case i386:
-    			return SDKMan.Platform.LINUX32;
-    		default:
-    			throw new UnsupportedOperationException("Linux " + cpu + " Platform unsupported.");
-    		}
-    	case MACOS:
-    		switch(cpu) {
-    		case amd64:
-    			return SDKMan.Platform.DARWINX64;
-    		case arm:
-    			return SDKMan.Platform.DARWINARM64;
-    		default:
-    			throw new UnsupportedOperationException("Mac OS " + cpu + " Platform unsupported.");
-    		}
-    	case WINDOWS:
-    		switch(cpu) {
-    		case amd64:
-    			return SDKMan.Platform.WINDOWSX64;
-    		default:
-    			throw new UnsupportedOperationException("Windows " + cpu + " Platform unsupported.");
-    		}
-		case SOLARIS:
-			return SDKMan.Platform.SUNOS;
-		case AIX:
-			return SDKMan.Platform.EXOTIC;
-    	default:
-			throw new UnsupportedOperationException("Platform " + platform + " unsupported.");
-    	}
+        switch (platform) {
+            case ALPINE_LINUX:
+            case LINUX:
+                switch (cpu) {
+                    case amd64:
+                        return SDKMan.Platform.LINUX64;
+                    case arm:
+                        /* TODO can be more specific? */
+                        return SDKMan.Platform.LINUXARM64;
+                    case i386:
+                        return SDKMan.Platform.LINUX32;
+                    default:
+                        throw new UnsupportedOperationException("Linux " + cpu + " Platform unsupported.");
+                }
+            case MACOS:
+                switch (cpu) {
+                    case amd64:
+                        return SDKMan.Platform.DARWINX64;
+                    case arm:
+                        return SDKMan.Platform.DARWINARM64;
+                    default:
+                        throw new UnsupportedOperationException("Mac OS " + cpu + " Platform unsupported.");
+                }
+            case WINDOWS:
+                switch (cpu) {
+                    case amd64:
+                        return SDKMan.Platform.WINDOWSX64;
+                    default:
+                        throw new UnsupportedOperationException("Windows " + cpu + " Platform unsupported.");
+                }
+            case SOLARIS:
+                return SDKMan.Platform.SUNOS;
+            case AIX:
+                return SDKMan.Platform.EXOTIC;
+            default:
+                throw new UnsupportedOperationException("Platform " + platform + " unsupported.");
+        }
     }
 
     @NonNull
     protected static SDKMANVendorList getSDKMANVendorList(String candidate) throws IOException {
         try {
-			return getSDKMANVendorList(candidate, Platform.current(), CPU.current());
+            return getSDKMANVendorList(candidate, Platform.current(), CPU.current());
         } catch (IOException | DetectionFailedException | RuntimeException e) {
-			throw new IOException(Messages.SDKMANToolInstaller_vendorList_NoDownloadable(), e);
-		}
+            throw new IOException(Messages.SDKMANToolInstaller_vendorList_NoDownloadable(), e);
+        }
     }
-    
+
     @NonNull
-    protected static SDKMANVendorList getSDKMANVendorList(String candidate, Platform platform, CPU cpu) throws IOException {
+    protected static SDKMANVendorList getSDKMANVendorList(String candidate, Platform platform, CPU cpu)
+            throws IOException {
         SDKMANVendorList list = new SDKMANVendorList();
         if ("java".equalsIgnoreCase(candidate)) {
             Map<String, List<SDKManVersion>> vendorMap = new HashMap<>();
-            List<CandidateVersion> versions = sdkMan.available(candidate, toPlatform(platform, cpu)).toList();
+            List<CandidateVersion> versions =
+                    sdkMan.available(candidate, toPlatform(platform, cpu)).toList();
 
-			for (CandidateVersion candidateVersion : versions) {
-				String vendorName = candidateVersion.vendor();
-				if (vendorName == null || vendorName.isBlank()) {
-					vendorName = "SDKMAN";
-				}
-				List<SDKManVersion> family = vendorMap.computeIfAbsent(vendorName, k -> new ArrayList<>());
-				SDKManVersion version = new SDKManVersion();
-				version.id = candidateVersion.identifier();
-				family.add(version);
+            for (CandidateVersion candidateVersion : versions) {
+                String vendorName = candidateVersion.vendor();
+                if (vendorName == null || vendorName.isBlank()) {
+                    vendorName = "SDKMAN";
+                }
+                List<SDKManVersion> family = vendorMap.computeIfAbsent(vendorName, k -> new ArrayList<>());
+                SDKManVersion version = new SDKManVersion();
+                version.id = candidateVersion.identifier();
+                family.add(version);
             }
 
-            list.data = vendorMap.entrySet().stream().map(e -> {
-                SDKMANVendor family = new SDKMANVendor();
-                family.name = e.getKey();
-                family.versions = e.getValue().toArray(new SDKManVersion[0]);
-                return family;
-            }).toList().toArray(new SDKMANVendor[0]);
+            list.data = vendorMap.entrySet().stream()
+                    .map(e -> {
+                        SDKMANVendor family = new SDKMANVendor();
+                        family.name = e.getKey();
+                        family.versions = e.getValue().toArray(new SDKManVersion[0]);
+                        return family;
+                    })
+                    .toList()
+                    .toArray(new SDKMANVendor[0]);
             return list;
         }
 
         List<String> versions = sdkMan.versions(candidate, toPlatform(platform, cpu));
         SDKMANVendor family = new SDKMANVendor();
         family.name = "SDKMAN";
-        family.versions = versions.stream().map(v -> {
-            SDKManVersion version = new SDKManVersion();
-            version.id = v;
-            return version;
-        }).toArray(SDKManVersion[]::new);
-        list.data = new SDKMANVendor[] { family };
+        family.versions = versions.stream()
+                .map(v -> {
+                    SDKManVersion version = new SDKManVersion();
+                    version.id = v;
+                    return version;
+                })
+                .toArray(SDKManVersion[]::new);
+        list.data = new SDKMANVendor[] {family};
         return list;
     }
 
@@ -226,19 +205,19 @@ public class SDKMANToolInstaller extends ToolInstaller {
                     }
                 }
                 return expected;
-            } 
-            
+            }
+
             SDKMan.Platform platform = toPlatform(p, c);
-            
-            CandidateVersion candidateVersion = sdkMan.version(candidate, platform, id).orElseThrow(() -> {
-    			return new IOException(Messages.SDKMANToolInstaller_performInstallation_versionNotFound(id));
-            });
-            
+
+            CandidateVersion candidateVersion = sdkMan.version(candidate, platform, id)
+                    .orElseThrow(() -> {
+                        return new IOException(Messages.SDKMANToolInstaller_performInstallation_versionNotFound(id));
+                    });
 
             String url = candidateVersion.url(platform).toExternalForm();
             ZipExtractionInstaller zipExtractionInstaller = new ZipExtractionInstaller(null, url, null);
             FilePath installation = zipExtractionInstaller.performInstallation(tool, node, log);
-            
+
             installation.child(".timestamp").delete(); // we don't use the timestamp
             FilePath base = findPullUpDirectory(installation, p);
             if (base != null && base != expected) {
@@ -271,7 +250,9 @@ public class SDKMANToolInstaller extends ToolInstaller {
 
     private File getLocalCacheFile(Platform platform, CPU cpu) {
         // we force .zip file
-        return new File(Jenkins.get().getRootDir(), "caches/sdkmantoolinstaller/" + sdkCandidate() + "/" + platform + "/" + cpu + "/" + id + ".zip");
+        return new File(
+                Jenkins.get().getRootDir(),
+                "caches/sdkmantoolinstaller/" + sdkCandidate() + "/" + platform + "/" + cpu + "/" + id + ".zip");
     }
 
     protected static boolean toolTypeNameIs(Class<? extends ToolInstallation> toolType, String className) {
@@ -437,7 +418,7 @@ public class SDKMANToolInstaller extends ToolInstaller {
     }
 
     @SuppressWarnings("serial")
-	private static final class DetectionFailedException extends Exception {
+    private static final class DetectionFailedException extends Exception {
         private DetectionFailedException(String message) {
             super(message);
         }
@@ -488,7 +469,5 @@ public class SDKMANToolInstaller extends ToolInstaller {
         public boolean matchesId(String rhs) {
             return rhs != null && rhs.equals(id);
         }
-
     }
-
 }

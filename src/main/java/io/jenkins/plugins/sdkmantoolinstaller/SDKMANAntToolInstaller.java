@@ -1,15 +1,13 @@
 package io.jenkins.plugins.sdkmantoolinstaller;
 
-import java.io.IOException;
-import java.util.List;
-
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstallerDescriptor;
+import java.io.IOException;
+import java.util.List;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class SDKMANAntToolInstaller extends SDKMANToolInstaller {
 

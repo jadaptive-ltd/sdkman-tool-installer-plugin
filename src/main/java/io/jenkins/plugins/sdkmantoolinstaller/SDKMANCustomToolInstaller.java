@@ -1,12 +1,11 @@
 package io.jenkins.plugins.sdkmantoolinstaller;
 
-import org.jenkinsci.Symbol;
-import org.kohsuke.stapler.DataBoundConstructor;
-
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.tools.ToolInstallation;
 import hudson.tools.ToolInstallerDescriptor;
+import org.jenkinsci.Symbol;
+import org.kohsuke.stapler.DataBoundConstructor;
 
 public class SDKMANCustomToolInstaller extends SDKMANToolInstaller {
 

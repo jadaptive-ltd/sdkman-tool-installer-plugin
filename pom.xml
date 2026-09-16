@@ -41,15 +41,7 @@
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
   </properties>
-  
-  <dependencies>
-	  <!--<dependency>
-	    <groupId>io.jenkins.plugins</groupId>
-	    <artifactId>commons-compress-api</artifactId>
-	  </dependency>-->
-	</dependencies>
 
-  
   <dependencyManagement>
     <dependencies>
       <dependency>
@@ -61,6 +53,13 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <dependencies>
+    <!--<dependency>
+	    <groupId>io.jenkins.plugins</groupId>
+	    <artifactId>commons-compress-api</artifactId>
+	  </dependency>-->
+  </dependencies>
 
   <repositories>
     <repository>
