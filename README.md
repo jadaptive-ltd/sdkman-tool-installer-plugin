@@ -1,4 +1,4 @@
-# sdkman-tool-installer
+# sdkman-tool-installer-plugin
 
 ## Introduction
 
