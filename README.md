@@ -56,14 +56,23 @@ For **Custom Tool**, enter both values manually:
 Once saved, Jenkins will install the requested tool on the agent the first time it is needed.
 The plugin resolves the correct platform-specific download for the target node, which is especially useful when your Jenkins environment includes different operating systems or CPU architectures.
 
-### Screenshot placeholders
+### Screenshots
 
-Add screenshots for the following:
+#### Adding a JDK tool
 
-- **Global Tool Configuration - JDK installer**: show the SDKMAN installer attached to a JDK tool and the vendor/version selector.
-- **Global Tool Configuration - Maven/Gradle/Ant/Groovy installer**: show one non-JDK tool using the SDKMAN installer and version selector.
-- **Global Tool Configuration - Custom Tool installer**: show the manual `candidate` and `version` text fields.
-- **Pipeline usage example**: show a Pipeline run or console output where Jenkins installs the tool on demand.
+![jdk-tool-install](src/images/jdk-tool-install.png)
+
+#### Selecting SDKMan as tool installer for Maven
+
+![maven-tool-select](src/images/maven-tool-select.png)
+
+#### Adding a Maven tool
+
+![maven-tool-install](src/images/maven-tool-install.png)
+
+#### Adding a Custom tool
+
+![custom-tool-install](src/images/custom-tool-install.png)
 
 ### Example: JDK in Pipeline
 
