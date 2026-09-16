@@ -1,0 +1,4 @@
+<?jelly escape-by-default='true'?>
+<div>
+    Allows any JDK or SDK available through <a href="https://sdkman.io/jdks/">SDKMAN</a> to be installed automatically for your jobs.
+</div>
