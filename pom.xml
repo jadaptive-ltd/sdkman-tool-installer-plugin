@@ -30,7 +30,6 @@
   </scm>
 
   <properties>
-    <revision>1.0</revision>
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.555</jenkins.baseline>
@@ -44,25 +43,6 @@
     <ban-deprecated-stapler.skip>false</ban-deprecated-stapler.skip>
     <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
-
-  <dependencyManagement>
-    <dependencies>
-      <dependency>
-        <groupId>io.jenkins.tools.bom</groupId>
-        <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>7020.vf38cb_40380d1</version>
-        <type>pom</type>
-        <scope>import</scope>
-      </dependency>
-    </dependencies>
-  </dependencyManagement>
-
-  <dependencies>
-    <!--<dependency>
-	    <groupId>io.jenkins.plugins</groupId>
-	    <artifactId>commons-compress-api</artifactId>
-	  </dependency>-->
-  </dependencies>
 
   <repositories>
     <repository>

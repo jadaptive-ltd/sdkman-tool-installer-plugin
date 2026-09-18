@@ -54,6 +54,8 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import hudson.ProxyConfiguration;
+
 public class SDKMan {
 
     public static final class Content {
@@ -353,7 +355,7 @@ public class SDKMan {
 
     private static <T> T http(String path, BiFunction<URI, HttpResponse<InputStream>, T> in) {
         var uri = URI.create(API_URI + path);
-        var client = HttpClient.newBuilder()
+        var client = ProxyConfiguration.newHttpClientBuilder()
                 .followRedirects(Redirect.NEVER)
                 .connectTimeout(Duration.ofSeconds(20))
                 .build();

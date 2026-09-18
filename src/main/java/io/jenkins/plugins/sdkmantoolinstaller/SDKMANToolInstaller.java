@@ -367,6 +367,7 @@ public class SDKMANToolInstaller extends ToolInstaller {
         Sparc,
         s390x,
         ppc64,
+        ppc64le,
         arm;
 
         public static CPU of(Node n) throws IOException, InterruptedException, DetectionFailedException {
@@ -384,6 +385,7 @@ public class SDKMANToolInstaller extends ToolInstaller {
             if (arch.contains("86")) return i386;
             if (arch.contains("s390x")) return s390x;
             if (arch.contains("ppc64")) return ppc64;
+            if (arch.contains("ppc64le")) return ppc64le;
             if (arch.contains("arm") || arch.contains("aarch64")) return arm;
             throw new DetectionFailedException(Messages.SDKMANToolInstaller_CPU_unknownCpu(arch));
         }

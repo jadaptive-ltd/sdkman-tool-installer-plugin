@@ -25,7 +25,7 @@
   -->
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
-    <f:entry title="${%Version}" field="id" help="/plugin/sdkmantoolinstaller/version.html">
+    <f:entry title="${%Version}" field="id">
         <j:choose>
             <j:set var="vendors" value="${descriptor.installableVendors}"/>
             <j:when test="${empty(vendors)}">
@@ -34,15 +34,17 @@
                 <div>No SDK vendors found!</div>
             </j:when>
             <j:otherwise>
-                <select name="_.id">
-                    <j:forEach var="vendor" items="${vendors}">
-                        <optgroup label="${vendor.name}">
-                            <j:forEach var="version" items="${vendor.versions}">
-                                <f:option value="${version.id}" selected="${version.matchesId(instance.id)}">${version.id}</f:option>
-                            </j:forEach>
-                        </optgroup>
-                    </j:forEach>
-                </select>
+                <div class="jenkins-select">
+                    <select name="_.id" class="jenkins-select__input">
+                        <j:forEach var="vendor" items="${vendors}">
+                            <optgroup label="${vendor.name}">
+                                <j:forEach var="version" items="${vendor.versions}">
+                                    <f:option value="${version.id}" selected="${version.matchesId(instance.id)}">${version.id}</f:option>
+                                </j:forEach>
+                            </optgroup>
+                        </j:forEach>
+                    </select>
+                </div>
             </j:otherwise>
         </j:choose>
     </f:entry>
